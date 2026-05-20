@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Blackoid AI — Company Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@200;300;400;500;600&family=Space+Mono:ital,wght@0,400;1,400&display=swap" rel="stylesheet"/>
+
+<style>
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black:       #070707;
+  --black-1:     #0D0D0D;
+  --black-2:     #111111;
+  --black-3:     #161616;
+  --black-4:     #1C1C1C;
+  --grey-deep:   #242424;
+  --grey-dark:   #2E2E2E;
+  --grey-mid:    #444444;
+  --grey:        #6E6E6E;
+  --grey-light:  #999999;
+  --silver:      #BCBCBC;
+  --white-dim:   #DEDEDE;
+  --white:       #F2F2F2;
+  --pure:        #FFFFFF;
+  --glass-bg:    rgba(255,255,255,0.025);
+  --glass-b:     rgba(255,255,255,0.07);
+  --glow:        rgba(255,255,255,0.06);
+}
+
+html { scroll-behavior: smooth; overflow-x: hidden; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 300;
+  cursor: none;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── NOISE ─── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ─── LOADER ─── */
+#loader {
+  position: fixed;
+  inset: 0;
+  background: var(--black);
+  z-index: 9997;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.5s ease;
+}
+#loader.done {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+.loader-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: 0.35em;
+  color: var(--pure);
+  text-transform: uppercase;
+}
+.loader-bar {
+  width: 200px;
+  height: 1px;
+  background: var(--grey-dark);
+  position: relative;
+  overflow: hidden;
+}
+.loader-bar::after {
+  content: '';
+  position: absolute;
+  left: -100%;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--pure), transparent);
+  animation: loaderSweep 1.2s ease forwards;
+}
+@keyframes loaderSweep {
+  from { left: -100%; }
+  to   { left: 100%; }
+}
+
+/* ─── CURSOR ─── */
+#cur-ring {
+  position: fixed;
+  width: 34px; height: 34px;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width .25s, height .25s, background .25s, border-color .25s;
+  mix-blend-mode: difference;
+}
+#cur-dot {
+  position: fixed;
+  width: 5px; height: 5px;
+  background: var(--pure);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: transform .08s ease;
+}
+body:has(a:hover, button:hover, .magnetic:hover) #cur-ring {
+  width: 52px; height: 52px;
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.6);
+}
+
+/* ─── CANVAS ─── */
+#canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease 1.6s;
+}
+#canvas.show { opacity: 1; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--black); }
+::-webkit-scrollbar-thumb { background: var(--grey-dark); border-radius: 2px; }
+
+/* ─── NAV ─── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 1.4rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(7,7,7,0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.6s ease 1.8s, transform 0.6s ease 1.8s;
+}
+nav.show { opacity: 1; transform: translateY(0); }
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--pure);
+}
+.nav-logo span { color: var(--grey); font-weight: 400; }
+.nav-phone {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--grey-light);
+  letter-spacing: 0.08em;
+}
+
+/* ─── HERO ─── */
+#hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 8vw;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.hero-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 75% 75% at 30% 50%, black 30%, transparent 80%);
+  pointer-events: none;
+}
+
+.hero-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+  top: 50%; left: 30%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--grey);
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease 1.9s, transform 0.7s ease 1.9s;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.hero-eyebrow::before {
+  content: '';
+  display: block;
+  width: 30px; height: 1px;
+  background: var(--grey-mid);
+}
+nav.show ~ #hero .hero-eyebrow,
+.hero-eyebrow.show { opacity: 1; transform: translateY(0); }
+
+.hero-headline {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(3.5rem, 9vw, 8.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  max-width: 900px;
+  overflow: hidden;
+}
+
+.hero-line {
+  display: block;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.9s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.hero-line.show { clip-path: inset(0 0 0% 0); }
+.hero-line:nth-child(2) { transition-delay: 0.08s; }
+.hero-line:nth-child(3) { transition-delay: 0.16s; color: var(--grey-mid); }
+
+.hero-sub {
+  font-size: clamp(0.9rem, 1.6vw, 1.1rem);
+  color: var(--grey-light);
+  max-width: 500px;
+  line-height: 1.8;
+  font-weight: 300;
+  margin-top: 2.5rem;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.8s ease 2.5s, transform 0.8s ease 2.5s;
+}
+.hero-sub.show { opacity: 1; transform: translateY(0); }
+
+.hero-ctas {
+  display: flex;
+  gap: 1rem;
+  margin-top: 3rem;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.8s ease 2.7s, transform 0.8s ease 2.7s;
+}
+.hero-ctas.show { opacity: 1; transform: translateY(0); }
+
+.btn-primary {
+  position: relative;
+  padding: 1rem 2.2rem;
+  background: var(--pure);
+  color: var(--black);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background 0.2s ease;
+}
+.btn-primary:hover { background: var(--silver); }
+
+.btn-outline {
+  padding: 1rem 2.2rem;
+  border: 1px solid var(--grey-dark);
+  color: var(--grey-light);
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: inline-block;
+  transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+.btn-outline:hover { border-color: var(--grey); color: var(--white); background: rgba(255,255,255,0.03); }
+
+.hero-scroll-ind {
+  position: absolute;
+  bottom: 3rem;
+  left: 8vw;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  opacity: 0;
+  transition: opacity 0.8s ease 3s;
+}
+.hero-scroll-ind.show { opacity: 0.3; }
+.scroll-track {
+  width: 1px; height: 50px;
+  background: var(--grey-dark);
+  position: relative;
+  overflow: hidden;
+}
+.scroll-track::after {
+  content: '';
+  position: absolute;
+  top: -100%; left: 0;
+  width: 100%; height: 100%;
+  background: var(--grey-light);
+  animation: scrollTrack 2.5s ease infinite;
+}
+@keyframes scrollTrack {
+  from { top: -100%; }
+  to   { top: 100%; }
+}
+.scroll-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--grey);
+  writing-mode: vertical-rl;
+}
+
+.hero-badge {
+  position: absolute;
+  right: 8vw;
+  bottom: 3rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--grey);
+  letter-spacing: 0.15em;
+  text-align: right;
+  line-height: 2;
+  opacity: 0;
+  transition: opacity 0.8s ease 3.1s;
+}
+.hero-badge.show { opacity: 0.5; }
+
+/* ─── MARQUEE ─── */
+.marquee-wrap {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  border-top: 1px solid var(--grey-deep);
+  border-bottom: 1px solid var(--grey-deep);
+  padding: 1.1rem 0;
+  background: var(--black-2);
+}
+.marquee-track {
+  display: flex;
+  gap: 0;
+  white-space: nowrap;
+  animation: marqueeScroll 28s linear infinite;
+}
+.marquee-track:hover { animation-play-state: paused; }
+.marquee-item {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--grey);
+  padding: 0 3rem;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+.marquee-item::after {
+  content: '✦';
+  color: var(--grey-dark);
+  font-size: 0.5rem;
+}
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ─── SECTIONS BASE ─── */
+section {
+  position: relative;
+  z-index: 2;
+  padding: 7rem 8vw;
+}
+.label-mono {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--grey);
+  display: block;
+  margin-bottom: 1.5rem;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.section-sub {
+  color: var(--grey-light);
+  font-size: 0.95rem;
+  line-height: 1.8;
+  max-width: 520px;
+  margin-top: 1rem;
+  font-weight: 300;
+}
+
+/* ─── REVEAL ─── */
+.rv {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.75s ease, transform 0.75s ease;
+}
+.rv.in { opacity: 1; transform: translateY(0); }
+.rv-clip {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.85s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.rv-clip.in { clip-path: inset(0 0 0% 0); }
+
+/* ─── IDENTITY ─── */
+#identity {
+  background: var(--black-1);
+  border-top: 1px solid var(--grey-deep);
+}
+.identity-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6rem;
+  align-items: start;
+}
+.identity-left .big-statement {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.3rem, 2.5vw, 1.9rem);
+  line-height: 1.4;
+  color: var(--white-dim);
+  letter-spacing: -0.01em;
+}
+.identity-left .big-statement em {
+  font-style: italic;
+  color: var(--grey-light);
+}
+.identity-divider {
+  width: 40px; height: 1px;
+  background: var(--grey-dark);
+  margin: 2rem 0;
+}
+.identity-left p {
+  font-size: 0.9rem;
+  color: var(--grey);
+  line-height: 1.85;
+}
+.identity-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.id-cell {
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--grey-deep);
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  transition: padding-left 0.3s ease;
+}
+.id-cell:first-child { border-top: 1px solid var(--grey-deep); }
+.id-cell:hover { padding-left: 0.5rem; }
+.id-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--grey-dark);
+  margin-top: 0.15rem;
+}
+.id-cell h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
+.id-cell p {
+  font-size: 0.85rem;
+  color: var(--grey);
+  line-height: 1.75;
+}
+
+/* ─── METRICS ─── */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--grey-deep);
+  border-bottom: 1px solid var(--grey-deep);
+  background: var(--black-2);
+}
+.metric {
+  padding: 4rem 2.5rem;
+  border-right: 1px solid var(--grey-deep);
+  text-align: center;
+}
+.metric:last-child { border-right: none; }
+.metric-val {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  color: var(--white);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  display: block;
+}
+.metric-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--grey);
+  text-transform: uppercase;
+  margin-top: 0.75rem;
+  display: block;
+}
+
+/* ─── SERVICES ─── */
+#services {
+  background: var(--black);
+}
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--grey-deep);
+  border: 1px solid var(--grey-deep);
+  margin-top: 3.5rem;
+}
+.svc-card {
+  background: var(--black-1);
+  padding: 2.5rem 2.2rem;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.35s ease;
+}
+.svc-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: transparent;
+  transition: background 0.35s ease;
+}
+.svc-card:hover { background: var(--black-3); }
+.svc-card:hover::before { background: rgba(255,255,255,0.15); }
+.svc-card.featured { background: var(--black-3); }
+.svc-card.featured::before { background: rgba(255,255,255,0.2); }
+
+.svc-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--grey-dark);
+  letter-spacing: 0.2em;
+  margin-bottom: 1.8rem;
+  display: block;
+}
+.svc-icon-wrap {
+  width: 40px; height: 40px;
+  border: 1px solid var(--grey-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  transition: border-color 0.3s ease;
+}
+.svc-card:hover .svc-icon-wrap { border-color: var(--grey-mid); }
+.svc-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  color: var(--grey);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+.svc-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin-bottom: 0.8rem;
+}
+.svc-card p {
+  font-size: 0.85rem;
+  color: var(--grey);
+  line-height: 1.8;
+}
+.svc-outcome {
+  margin-top: 1.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--grey-deep);
+  font-size: 0.78rem;
+  color: var(--grey-mid);
+  font-style: italic;
+  font-family: 'Manrope', sans-serif;
+  line-height: 1.6;
+}
+.featured-pill {
+  position: absolute;
+  top: 1.2rem; right: 1.2rem;
+  background: var(--white);
+  color: var(--black);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.5rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.7rem;
+}
+
+/* ─── PROBLEM ─── */
+#problem {
+  background: var(--black-1);
+  border-top: 1px solid var(--grey-deep);
+}
+.problem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--grey-deep);
+  border: 1px solid var(--grey-deep);
+  margin-top: 3.5rem;
+}
+.prob-cell {
+  background: var(--black-1);
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s ease;
+}
+.prob-cell:hover { background: var(--black-3); }
+.prob-cell::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 0; height: 1px;
+  background: rgba(255,255,255,0.15);
+  transition: width 0.4s ease;
+}
+.prob-cell:hover::after { width: 100%; }
+.prob-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.25em;
+  color: var(--grey-dark);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 1rem;
+}
+.prob-cell h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.75rem;
+  color: var(--white-dim);
+}
+.prob-cell p {
+  font-size: 0.85rem;
+  color: var(--grey);
+  line-height: 1.8;
+}
+
+/* ─── OFFER STATEMENT (GLASS) ─── */
+.glass-statement {
+  position: relative;
+  margin: 5rem 0 0;
+  padding: 3.5rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-b);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+.glass-statement::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: conic-gradient(from var(--border-angle), transparent 60%, rgba(255,255,255,0.15) 75%, transparent 90%);
+  border-radius: inherit;
+  animation: borderSpin 6s linear infinite;
+  z-index: -1;
+  padding: 1px;
+}
+@keyframes borderSpin { to { --border-angle: 360deg; } }
+.glass-statement p {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2.5vw, 1.9rem);
+  line-height: 1.45;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: var(--white-dim);
+}
+.glass-statement p em {
+  color: var(--grey);
+  font-style: normal;
+}
+.glass-statement cite {
+  display: block;
+  margin-top: 1.5rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--grey-mid);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-style: normal;
+}
+
+/* ─── PROCESS ─── */
+#process {
+  background: var(--black);
+  border-top: 1px solid var(--grey-deep);
+}
+.process-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin-top: 3.5rem;
+  border: 1px solid var(--grey-deep);
+}
+.step {
+  padding: 2.5rem 2rem;
+  border-right: 1px solid var(--grey-deep);
+  position: relative;
+  transition: background 0.3s ease;
+}
+.step:last-child { border-right: none; }
+.step:hover { background: var(--black-2); }
+.step-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 3.5rem;
+  color: var(--grey-deep);
+  line-height: 1;
+  margin-bottom: 1.5rem;
+  transition: color 0.3s ease;
+}
+.step:hover .step-num { color: var(--grey-dark); }
+.step h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.6rem;
+}
+.step p {
+  font-size: 0.82rem;
+  color: var(--grey);
+  line-height: 1.75;
+}
+
+/* ─── PORTFOLIO ─── */
+#portfolio {
+  background: var(--black-1);
+  border-top: 1px solid var(--grey-deep);
+}
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--grey-deep);
+  border: 1px solid var(--grey-deep);
+  margin-top: 3.5rem;
+}
+.port-item {
+  background: var(--black-1);
+  padding: 2.2rem 2.5rem;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: background 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.port-item::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 0 0 0 0;
+  border-color: transparent transparent transparent transparent;
+  transition: border-width 0.3s ease;
+}
+.port-item:hover { background: var(--black-3); }
+.port-item:hover::after {
+  border-width: 0 28px 28px 0;
+  border-color: transparent var(--grey-deep) transparent transparent;
+}
+.port-idx {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.25em;
+  color: var(--grey-dark);
+  text-transform: uppercase;
+}
+.port-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--white);
+}
+.port-niche {
+  font-size: 0.78rem;
+  color: var(--grey);
+  font-style: italic;
+}
+.port-url {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 1.2rem;
+  font-size: 0.78rem;
+  color: var(--grey-mid);
+  font-family: 'Space Mono', monospace;
+}
+.port-arrow {
+  color: var(--grey);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.port-item:hover .port-arrow { transform: translate(3px, -3px); color: var(--white); }
+.port-full {
+  grid-column: 1 / -1;
+  background: var(--black-2);
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 1rem;
+  padding: 1.8rem;
+  border-top: 1px solid var(--grey-deep);
+}
+.port-full .port-name { font-size: 0.85rem; }
+
+/* ─── INDUSTRIES ─── */
+.industries-section {
+  padding: 3rem 8vw 5rem;
+  background: var(--black-1);
+  border-top: 1px solid var(--grey-deep);
+}
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+.tag {
+  border: 1px solid var(--grey-deep);
+  padding: 0.45rem 1rem;
+  font-size: 0.75rem;
+  color: var(--grey);
+  letter-spacing: 0.05em;
+  transition: all 0.25s ease;
+  cursor: default;
+  font-family: 'Manrope', sans-serif;
+}
+.tag:hover { border-color: var(--grey-mid); color: var(--white-dim); background: rgba(255,255,255,0.02); }
+
+/* ─── WHY ─── */
+#why {
+  background: var(--black);
+  border-top: 1px solid var(--grey-deep);
+}
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--grey-deep);
+  border: 1px solid var(--grey-deep);
+  margin-top: 3.5rem;
+}
+.why-cell {
+  background: var(--black-1);
+  padding: 2.5rem;
+  transition: background 0.3s ease;
+}
+.why-cell:hover { background: var(--black-3); }
+.why-cell-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 2rem;
+  color: var(--grey-deep);
+  line-height: 1;
+  margin-bottom: 1.2rem;
+  transition: color 0.3s ease;
+}
+.why-cell:hover .why-cell-num { color: var(--grey-dark); }
+.why-cell h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.6rem;
+}
+.why-cell p {
+  font-size: 0.85rem;
+  color: var(--grey);
+  line-height: 1.8;
+}
+
+/* ─── TEAM ─── */
+#team {
+  background: var(--black-1);
+  border-top: 1px solid var(--grey-deep);
+}
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-top: 3.5rem;
+}
+.team-card {
+  border: 1px solid var(--grey-deep);
+  padding: 3rem;
+  background: var(--black-2);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+.team-card:hover { background: var(--black-3); border-color: var(--grey-dark); }
+.team-avatar {
+  width: 56px; height: 56px;
+  border: 1px solid var(--grey-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--grey-light);
+  background: var(--black-3);
+  margin-bottom: 1.8rem;
+  letter-spacing: 0.05em;
+}
+.team-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.3rem;
+}
+.team-role {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--grey);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 1.5rem;
+}
+.team-card p {
+  font-size: 0.87rem;
+  color: var(--grey);
+  line-height: 1.8;
+}
+.team-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--grey-mid);
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  transition: color 0.2s ease;
+}
+.team-social:hover { color: var(--grey-light); }
+
+/* ─── CONTACT ─── */
+#contact {
+  background: var(--black);
+  border-top: 1px solid var(--grey-deep);
+  text-align: center;
+  padding: 8rem 8vw;
+}
+.contact-pre {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  color: var(--grey);
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+.contact-headline {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6vw, 5.5rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.contact-headline em { color: var(--grey-mid); font-style: normal; display: block; }
+.contact-sub {
+  margin: 2rem auto 0;
+  max-width: 480px;
+  color: var(--grey);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+.contact-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 3.5rem;
+}
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1rem 2rem;
+  border: 1px solid var(--grey-dark);
+  color: var(--grey-light);
+  text-decoration: none;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  transition: all 0.25s ease;
+}
+.contact-link:hover {
+  border-color: var(--grey);
+  color: var(--white);
+  background: rgba(255,255,255,0.03);
+}
+.contact-link.primary {
+  background: var(--white);
+  color: var(--black);
+  border-color: var(--white);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+.contact-link.primary:hover {
+  background: var(--silver);
+  border-color: var(--silver);
+}
+
+/* ─── FOOTER ─── */
+footer {
+  background: var(--black-2);
+  border-top: 1px solid var(--grey-deep);
+  padding: 2rem 8vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+footer p {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--grey-dark);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+footer .footer-brand {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--grey-mid);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  nav { padding: 1.2rem 5vw; }
+  section { padding: 5rem 5vw; }
+  .identity-layout { grid-template-columns: 1fr; gap: 3rem; }
+  .services-grid { grid-template-columns: 1fr; }
+  .problem-grid { grid-template-columns: 1fr; }
+  .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  .metric { border-right: 1px solid var(--grey-deep); }
+  .metric:nth-child(2n) { border-right: none; }
+  .process-steps { grid-template-columns: repeat(2, 1fr); }
+  .step { border-bottom: 1px solid var(--grey-deep); }
+  .portfolio-grid { grid-template-columns: 1fr; }
+  .why-grid { grid-template-columns: 1fr; }
+  .team-grid { grid-template-columns: 1fr; }
+  .hero-badge { display: none; }
+  footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+  .industries-section { padding: 3rem 5vw 5rem; }
+}
+@media (max-width: 600px) {
+  .hero-headline { font-size: clamp(2.8rem, 12vw, 4rem); }
+  .hero-ctas { flex-direction: column; }
+  .metrics-row { grid-template-columns: 1fr 1fr; }
+  .process-steps { grid-template-columns: 1fr; }
+  #cur-ring, #cur-dot { display: none; }
+  body { cursor: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOADER ═══ -->
+<div id="loader">
+  <div class="loader-logo">Blackoid AI</div>
+  <div class="loader-bar"></div>
+</div>
+
+<!-- ═══ CURSOR ═══ -->
+<div id="cur-ring"></div>
+<div id="cur-dot"></div>
+
+<!-- ═══ PARTICLE CANVAS ═══ -->
+<canvas id="canvas"></canvas>
+
+<!-- ═══ NAV ═══ -->
+<nav id="nav">
+  <div class="nav-logo">Blackoid <span>AI</span></div>
+  <div class="nav-phone">+966 570 935 328</div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-glow"></div>
+
+  <p class="hero-eyebrow" id="eyebrow">// AI-POWERED GROWTH SYSTEM · EST. 2022</p>
+
+  <h1 class="hero-headline">
+    <span class="hero-line" id="hl1">STOP LEAKING</span>
+    <span class="hero-line" id="hl2">REVENUE.</span>
+    <span class="hero-line" id="hl3">START SCALING.</span>
+  </h1>
+
+  <p class="hero-sub" id="heroSub">
+    We are not a traditional agency. We are the AI intelligence layer your business has been missing — the system that captures every lead, closes faster, and compounds growth without adding headcount.
+  </p>
+
+  <div class="hero-ctas" id="heroCtas">
+    <a href="#contact" class="btn-primary magnetic">See What We Build →</a>
+    <a href="#services" class="btn-outline magnetic">Our Systems</a>
+  </div>
+
+  <div class="hero-scroll-ind" id="heroScroll">
+    <div class="scroll-track"></div>
+    <span class="scroll-text">Scroll</span>
+  </div>
+
+  <div class="hero-badge" id="heroBadge">
+    AI Receptionist<br/>
+    Website Creation<br/>
+    Marketing Automation<br/>
+    Lead Generation
+  </div>
+</section>
+
+<!-- ═══ MARQUEE ═══ -->
+<div class="marquee-wrap">
+  <div class="marquee-track" id="marqueeTrack">
+    <!-- duplicated by JS -->
+  </div>
+</div>
+
+<!-- ═══ IDENTITY ═══ -->
+<section id="identity">
+  <div class="rv">
+    <span class="label-mono">// 01 — WHO WE ARE</span>
+    <div class="identity-layout">
+      <div class="identity-left">
+        <p class="big-statement">We build AI systems that close the gap between where your business is and <em>where it should be</em> — with precision, speed, and zero excuses.</p>
+        <div class="identity-divider"></div>
+        <p>Blackoid AI was built in the AI era, not retrofitted into it. We are outcome-obsessed, market-aware, and operate across the full digital stack. Two founders. One mission: remove the bottlenecks costing your business money every single day.</p>
+      </div>
+      <div class="identity-right">
+        <div class="id-cell">
+          <span class="id-num">01</span>
+          <div>
+            <h3>Outcome-Obsessed</h3>
+            <p>Tools don't get paid. Outcomes do. Every system we build has a before, an after, and a metric — measured in time saved, revenue gained, or risk removed.</p>
+          </div>
+        </div>
+        <div class="id-cell">
+          <span class="id-num">02</span>
+          <div>
+            <h3>Full-Stack Execution</h3>
+            <p>Website. Marketing. AI Automation. Brand. One partner, one point of responsibility. We see the complete picture and build systems that connect — not fragments that compete.</p>
+          </div>
+        </div>
+        <div class="id-cell">
+          <span class="id-num">03</span>
+          <div>
+            <h3>Speed as Strategy</h3>
+            <p>Time compression is the most underrated competitive advantage. We move with urgency because every day of delay has a cost your competitors are cashing in on.</p>
+          </div>
+        </div>
+        <div class="id-cell">
+          <span class="id-num">04</span>
+          <div>
+            <h3>Built in the AI Era</h3>
+            <p>We are not a legacy agency that learned AI last quarter. We were founded with AI at the core — which means we think, build, and deliver differently.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ METRICS ═══ -->
+<div class="metrics-row">
+  <div class="metric rv">
+    <span class="metric-val counter" data-target="3">0</span>
+    <span class="metric-label">Years Deployed</span>
+  </div>
+  <div class="metric rv" style="transition-delay:0.1s">
+    <span class="metric-val counter" data-target="15">0</span>
+    <span class="metric-label">Systems Delivered</span>
+  </div>
+  <div class="metric rv" style="transition-delay:0.2s">
+    <span class="metric-val counter" data-target="7">0</span>
+    <span class="metric-label">Industries Served</span>
+  </div>
+  <div class="metric rv" style="transition-delay:0.3s">
+    <span class="metric-val">0</span>
+    <span class="metric-label">Leads Left Uncaptured</span>
+  </div>
+</div>
+
+<!-- ═══ SERVICES ═══ -->
+<section id="services">
+  <div class="rv">
+    <span class="label-mono">// 02 — WHAT WE DEPLOY</span>
+    <h2 class="section-title">The Full Stack.<br/>Nothing Missing.</h2>
+    <p class="section-sub">Every system we build is engineered for a specific outcome — not a vague deliverable. Scope is defined. Timelines are real. Results are the only metric that matters.</p>
+  </div>
+
+  <div class="services-grid rv">
+    <div class="svc-card featured">
+      <div class="featured-pill">Highest ROI</div>
+      <span class="svc-num">SVC — 01</span>
+      <div class="svc-icon-wrap">⚡</div>
+      <span class="svc-tag">AI Automation</span>
+      <h3>AI Receptionist & Voice Agent</h3>
+      <p>An intelligent system that answers inquiries, qualifies leads, books appointments, and follows up — automatically, 24/7, without a single human touch required. Your best sales rep. It never sleeps.</p>
+      <p class="svc-outcome">In 14 days: go from missing 40% of inbound leads to zero missed conversations — measured by booked calls per week.</p>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">SVC — 02</span>
+      <div class="svc-icon-wrap">🌐</div>
+      <span class="svc-tag">Core Service</span>
+      <h3>Website Creation</h3>
+      <p>High-performance websites built to rank on Google, convert visitors, and position your brand as the authority in your market. Not just beautiful — strategically engineered to turn attention into revenue.</p>
+      <p class="svc-outcome">In 30 days: a live, optimized website that works as your strongest sales asset — not a static business card.</p>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">SVC — 03</span>
+      <div class="svc-icon-wrap">📣</div>
+      <span class="svc-tag">Growth</span>
+      <h3>Digital Marketing & Ads</h3>
+      <p>Targeted campaigns reaching decision-makers, not just audiences. Paid ads, social media, content strategy — every move tied to a measurable outcome and a defined return on spend.</p>
+      <p class="svc-outcome">More leads, faster follow-up, better conversion — not vanity metrics like reach and impressions.</p>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">SVC — 04</span>
+      <div class="svc-icon-wrap">🤖</div>
+      <span class="svc-tag">Intelligence</span>
+      <h3>Workflow Automation</h3>
+      <p>Custom automations that eliminate manual processes, reduce human error, and give your team back the hours currently wasted on tasks a system can handle. From CRM to follow-up — we build the engine.</p>
+      <p class="svc-outcome">In 7 days: reduce admin hours from 10/week to under 3 — measured by staff time tracking.</p>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">SVC — 05</span>
+      <div class="svc-icon-wrap">📱</div>
+      <span class="svc-tag">Presence</span>
+      <h3>Social Media Management</h3>
+      <p>Consistent, strategic content that builds authority in your market. We create content that doesn't just perform — it builds trust, attracts clients, and positions your brand as the only obvious choice.</p>
+      <p class="svc-outcome">Show up professionally, consistently, across every platform that matters — without burning your time.</p>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">SVC — 06</span>
+      <div class="svc-icon-wrap">🎯</div>
+      <span class="svc-tag">Identity</span>
+      <h3>Brand Strategy</h3>
+      <p>Your brand is the first signal people receive. We build the visual identity, messaging framework, and market positioning that makes your business unforgettable before you ever say a word.</p>
+      <p class="svc-outcome">From invisible to authoritative — the brand that commands premium pricing and instant credibility.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PROBLEM ═══ -->
+<section id="problem">
+  <div class="rv">
+    <span class="label-mono">// 03 — THE REAL COST</span>
+    <h2 class="section-title">Here's What You're<br/>Losing Right Now.</h2>
+    <p class="section-sub">Every silent leak in your business is a compounding cost. Missed leads, slow responses, broken processes, weak presence. The damage is real — even when you can't see it on the balance sheet.</p>
+  </div>
+
+  <div class="problem-grid rv">
+    <div class="prob-cell">
+      <span class="prob-label">PAIN — 01</span>
+      <h3>Missed Leads & Slow Follow-Up</h3>
+      <p>The average business takes 12+ hours to respond to an inquiry. Your competitor responds in minutes. Speed is the new sales team — and most businesses don't have one working around the clock. Every hour of delay is a decision made without you in the room.</p>
+    </div>
+    <div class="prob-cell">
+      <span class="prob-label">PAIN — 02</span>
+      <h3>A Website That Doesn't Convert</h3>
+      <p>A weak digital presence doesn't just lose clients — it destroys credibility before the conversation starts. If your website doesn't convert visitors into buyers, it's not an asset. It's a liability that costs you silently every single day.</p>
+    </div>
+    <div class="prob-cell">
+      <span class="prob-label">PAIN — 03</span>
+      <h3>Manual Tasks Burning Revenue Hours</h3>
+      <p>Answering the same questions. Chasing appointments. Following up by hand. Every hour your team spends on repetitive admin is an hour they're not closing. Busy work is a revenue leak dressed as productivity — and it compounds.</p>
+    </div>
+    <div class="prob-cell">
+      <span class="prob-label">PAIN — 04</span>
+      <h3>Marketing Spend With No Return</h3>
+      <p>Running ads or content without a conversion system behind it is a budget drain with no ceiling. Traffic means nothing without an engine to capture, qualify, and close. You're funding attention for someone else to convert.</p>
+    </div>
+  </div>
+
+  <div class="glass-statement rv">
+    <p>We don't sell services. <em>We remove expensive problems — and we measure exactly what that removal is worth.</em></p>
+    <cite>— The Blackoid AI Commitment</cite>
+  </div>
+</section>
+
+<!-- ═══ PROCESS ═══ -->
+<section id="process">
+  <div class="rv">
+    <span class="label-mono">// 04 — HOW WE OPERATE</span>
+    <h2 class="section-title">Deployed in Days.<br/>Not Months.</h2>
+  </div>
+  <div class="process-steps rv">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Discovery & Diagnosis</h3>
+      <p>We identify the exact revenue leak, define the measurable outcome, and build a precise scope before a single file is opened. No vague briefs. No moving goalposts.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Build & Configure</h3>
+      <p>Access and setup in 48 hours. System built and internally tested within the first week. Fast doesn't mean rushed — it means our process is designed for speed without compromise.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Review & Launch</h3>
+      <p>Client walkthrough, final tweaks, and go-live. Every deliverable is reviewed against the defined outcome metric — not against a vague checklist. We don't close until it's right.</p>
+    </div>
+    <div class="step" style="border-right:none">
+      <div class="step-num">04</div>
+      <h3>Retain & Scale</h3>
+      <p>We monitor, maintain, and continuously optimize. A system that launched is not a system that's finished. We stay in the engine room so your business keeps compounding.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PORTFOLIO ═══ -->
+<section id="portfolio">
+  <div class="rv">
+    <span class="label-mono">// 05 — SELECTED WORK</span>
+    <h2 class="section-title">Outcomes Deployed.<br/>Businesses Transformed.</h2>
+    <p class="section-sub">Every project in our portfolio is live, functional, and producing results. Click to inspect the work.</p>
+  </div>
+  <div class="portfolio-grid rv">
+    <a href="https://www.red-engage.com" target="_blank" class="port-item">
+      <span class="port-idx">PROJECT — 01</span>
+      <span class="port-name">Red Engage</span>
+      <span class="port-niche">Marketing Agency</span>
+      <span class="port-url">red-engage.com <span class="port-arrow">↗</span></span>
+    </a>
+    <a href="https://o3innovations.com/" target="_blank" class="port-item">
+      <span class="port-idx">PROJECT — 02</span>
+      <span class="port-name">O3 Innovations</span>
+      <span class="port-niche">Technology & Innovation</span>
+      <span class="port-url">o3innovations.com <span class="port-arrow">↗</span></span>
+    </a>
+    <a href="https://perfectsystems-ai.com/" target="_blank" class="port-item">
+      <span class="port-idx">PROJECT — 03</span>
+      <span class="port-name">Perfect Systems AI</span>
+      <span class="port-niche">AI Solutions</span>
+      <span class="port-url">perfectsystems-ai.com <span class="port-arrow">↗</span></span>
+    </a>
+    <a href="https://lavaletcompany.com/" target="_blank" class="port-item">
+      <span class="port-idx">PROJECT — 04</span>
+      <span class="port-name">Lavalet Company</span>
+      <span class="port-niche">Corporate & Professional Services</span>
+      <span class="port-url">lavaletcompany.com <span class="port-arrow">↗</span></span>
+    </a>
+    <a href="https://zi2digital.com/" target="_blank" class="port-item" style="grid-column:1/-1; flex-direction:row; align-items:center; justify-content:space-between; padding:1.8rem 2.5rem; background:var(--black-2);">
+      <div>
+        <span class="port-idx">PROJECT — 05</span>
+        <span class="port-name" style="font-size:0.95rem;">Zi2 Digital</span>
+        <span class="port-niche">Digital Agency</span>
+      </div>
+      <span class="port-url" style="margin:0;padding:0;font-size:0.8rem;">zi2digital.com <span class="port-arrow">↗</span></span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══ INDUSTRIES ═══ -->
+<div class="industries-section rv">
+  <span class="label-mono">// INDUSTRIES DEPLOYED</span>
+  <div class="tag-cloud">
+    <span class="tag">Healthcare & Dental</span>
+    <span class="tag">Restaurants & F&B</span>
+    <span class="tag">Content Creators</span>
+    <span class="tag">Marketing Agencies</span>
+    <span class="tag">Construction</span>
+    <span class="tag">E-Commerce & Retail</span>
+    <span class="tag">AI & Technology</span>
+    <span class="tag">Real Estate</span>
+    <span class="tag">Professional Services</span>
+    <span class="tag">Corporate B2B</span>
+    <span class="tag">Influencers & Personal Brand</span>
+  </div>
+</div>
+
+<!-- ═══ WHY ═══ -->
+<section id="why">
+  <div class="rv">
+    <span class="label-mono">// 06 — THE DIFFERENCE</span>
+    <h2 class="section-title">Why Blackoid AI<br/>Wins.</h2>
+  </div>
+  <div class="why-grid rv">
+    <div class="why-cell">
+      <div class="why-cell-num">01</div>
+      <h3>We Think in Outcomes, Not Deliverables</h3>
+      <p>Every project begins with a clear before-and-after. Where you are, where you need to be, and the exact metric that proves we got there. If we can't define the outcome in plain English, we don't accept the project.</p>
+    </div>
+    <div class="why-cell">
+      <div class="why-cell-num">02</div>
+      <h3>We Absorb the Complexity</h3>
+      <p>AI integrations, automation workflows, web engineering, marketing systems — you don't need to understand it. You need it to work. We own the complexity from end to end so your team stays focused on the business.</p>
+    </div>
+    <div class="why-cell">
+      <div class="why-cell-num">03</div>
+      <h3>Speed Is Built Into Our Process</h3>
+      <p>We don't have slow lanes. Setup in 48 hours. Live in under 14 days. Because time compression is the most underrated competitive advantage — and we've systematized it into every project we run.</p>
+    </div>
+    <div class="why-cell">
+      <div class="why-cell-num">04</div>
+      <h3>One Agency. Zero Fragmentation.</h3>
+      <p>Website. Marketing. AI. Brand. One relationship, one invoice, one team that sees the whole picture. No vendor management. No communication gaps. No broken handoffs. Just outcomes, delivered.</p>
+    </div>
+    <div class="why-cell">
+      <div class="why-cell-num">05</div>
+      <h3>We Price by Outcome Weight</h3>
+      <p>Our pricing reflects the operational reality of what we build and the weight of the outcome we're delivering. Not a number we made up. Not adjusted because you're nice. Certain, calm, and non-negotiable.</p>
+    </div>
+    <div class="why-cell">
+      <div class="why-cell-num">06</div>
+      <h3>We Choose Clients Who Are Ready</h3>
+      <p>We work with businesses that are serious about growth. Not because we're exclusive — because great systems require a committed partner. If you're ready to stop leaking revenue, there is no better team in the region.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TEAM ═══ -->
+<section id="team">
+  <div class="rv">
+    <span class="label-mono">// 07 — THE PRINCIPALS</span>
+    <h2 class="section-title">Built by Builders.</h2>
+    <p class="section-sub">Blackoid AI is led by two operators who understand both the strategy and the system. No figureheads. No middle layers. You work directly with the people building the intelligence.</p>
+  </div>
+  <div class="team-grid rv">
+    <div class="team-card">
+      <div class="team-avatar">AR</div>
+      <h3>Argh Roy</h3>
+      <span class="team-role">Co-Founder & Principal</span>
+      <p>A systems builder and growth operator with a direct focus on AI deployment and outcome engineering. Argh brings the technical precision and strategic clarity that turns business problems into automated solutions — fast, clean, and permanent.</p>
+      <a href="https://www.instagram.com/arghroy/" target="_blank" class="team-social">
+        ↗ @arghroy on Instagram
+      </a>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">MM</div>
+      <h3>Mohammed Misfer</h3>
+      <span class="team-role">Co-Founder & Principal</span>
+      <p>Founder of Misfer Media and a veteran of the AI-powered marketing space since 2022. Mohammed brings hands-on experience across websites, marketing automation, and AI systems — with a track record of deployments across multiple industries and markets.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CONTACT ═══ -->
+<section id="contact">
+  <div class="rv">
+    <p class="contact-pre">// 08 — THE NEXT STEP</p>
+    <h2 class="contact-headline">
+      Ready to Stop<br/>
+      <em>Losing Revenue?</em>
+    </h2>
+    <p class="contact-sub">We don't do lengthy proposals or vague timelines. One direct conversation to confirm fit — and if it's right, we move immediately. No friction. No delay.</p>
+    <div class="contact-actions">
+      <a href="tel:+966570935328" class="contact-link primary magnetic">+966 570 935 328</a>
+      <a href="https://www.instagram.com/arghroy/" target="_blank" class="contact-link magnetic">↗ @arghroy</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <p>© 2025 Blackoid AI · All Rights Reserved</p>
+  <div class="footer-brand">BLACKOID AI</div>
+  <p>KSA · BH · WORLDWIDE</p>
+</footer>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script>
+(function() {
+  'use strict';
+
+  /* ── MARQUEE CONTENT ── */
+  const ITEMS = ['AI Receptionist','Website Creation','Lead Automation','Digital Marketing','Brand Strategy','AI Systems','Growth Deployment','Full-Stack Agency'];
+  const track = document.getElementById('marqueeTrack');
+  if (track) {
+    const full = [...ITEMS, ...ITEMS, ...ITEMS, ...ITEMS];
+    track.innerHTML = full.map(i => `<span class="marquee-item">${i}</span>`).join('');
+  }
+
+  /* ── LOADER ── */
+  const loader = document.getElementById('loader');
+  const nav    = document.getElementById('nav');
+  const canvas = document.getElementById('canvas');
+
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      if (loader) loader.classList.add('done');
+      if (nav)    nav.classList.add('show');
+      if (canvas) canvas.classList.add('show');
+
+      setTimeout(function() {
+        const eyebrow = document.getElementById('eyebrow');
+        const heroSub = document.getElementById('heroSub');
+        const heroCtas= document.getElementById('heroCtas');
+        const heroScroll= document.getElementById('heroScroll');
+        const heroBadge= document.getElementById('heroBadge');
+        if (eyebrow) eyebrow.classList.add('show');
+        ['hl1','hl2','hl3'].forEach(function(id, i) {
+          setTimeout(function() {
+            var el = document.getElementById(id);
+            if (el) el.classList.add('show');
+          }, i * 120);
+        });
+        setTimeout(function() {
+          if (heroSub) heroSub.classList.add('show');
+          if (heroCtas) heroCtas.classList.add('show');
+          if (heroScroll) heroScroll.classList.add('show');
+          if (heroBadge) heroBadge.classList.add('show');
+        }, 400);
+      }, 800);
+    }, 1600);
+  });
+
+  /* ── CURSOR ── */
+  var ring = document.getElementById('cur-ring');
+  var dot  = document.getElementById('cur-dot');
+  var mx = -100, my = -100, rx = -100, ry = -100;
+
+  document.addEventListener('mousemove', function(e) {
+    mx = e.clientX; my = e.clientY;
+    if (dot) { dot.style.left = mx + 'px'; dot.style.top = my + 'px'; }
+  });
+
+  (function animCursor() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    if (ring) { ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; }
+    requestAnimationFrame(animCursor);
+  })();
+
+  /* ── PARTICLES ── */
+  var cv = document.getElementById('canvas');
+  if (cv) {
+    var ctx = cv.getContext('2d');
+    var pts = [];
+    var W, H;
+
+    function resize() {
+      W = cv.width  = window.innerWidth;
+      H = cv.height = window.innerHeight;
+    }
+
+    function mkParticles() {
+      pts = [];
+      var count = Math.min(80, Math.floor((W * H) / 18000));
+      for (var i = 0; i < count; i++) {
+        pts.push({
+          x:  Math.random() * W,
+          y:  Math.random() * H,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: (Math.random() - 0.5) * 0.25,
+          r:  Math.random() * 1.2 + 0.4
+        });
+      }
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < pts.length; i++) {
+        var p = pts[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fill();
+      }
+      for (var a = 0; a < pts.length; a++) {
+        for (var b = a + 1; b < pts.length; b++) {
+          var dx = pts[a].x - pts[b].x;
+          var dy = pts[a].y - pts[b].y;
+          var d  = Math.sqrt(dx*dx + dy*dy);
+          if (d < 130) {
+            ctx.beginPath();
+            ctx.moveTo(pts[a].x, pts[a].y);
+            ctx.lineTo(pts[b].x, pts[b].y);
+            ctx.strokeStyle = 'rgba(255,255,255,' + (0.08 * (1 - d / 130)) + ')';
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(drawParticles);
+    }
+
+    resize();
+    mkParticles();
+    drawParticles();
+    window.addEventListener('resize', function() { resize(); mkParticles(); });
+  }
+
+  /* ── SCROLL REVEAL ── */
+  var revEls = document.querySelectorAll('.rv, .rv-clip');
+  var revObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        revObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  revEls.forEach(function(el) { revObs.observe(el); });
+
+  /* ── COUNTER ANIMATION ── */
+  var counters = document.querySelectorAll('.counter');
+  var cObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var el = entry.target;
+        var target = parseInt(el.getAttribute('data-target'), 10);
+        var start = 0;
+        var dur = 1200;
+        var step = dur / target;
+        var t = setInterval(function() {
+          start++;
+          el.textContent = start + '+';
+          if (start >= target) { el.textContent = target + '+'; clearInterval(t); }
+        }, step);
+        cObs.unobserve(el);
+      }
+    });
+  }, { threshold: 0.3 });
+  counters.forEach(function(el) { cObs.observe(el); });
+
+  /* ── MAGNETIC BUTTONS ── */
+  document.querySelectorAll('.magnetic').forEach(function(btn) {
+    btn.addEventListener('mousemove', function(e) {
+      var r = btn.getBoundingClientRect();
+      var x = (e.clientX - r.left - r.width / 2) * 0.18;
+      var y = (e.clientY - r.top  - r.height/ 2) * 0.18;
+      btn.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    });
+    btn.addEventListener('mouseleave', function() {
+      btn.style.transform = '';
+    });
+  });
+
+  /* ── SMOOTH NAV LINKS ── */
+  document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+    a.addEventListener('click', function(e) {
+      var target = document.querySelector(a.getAttribute('href'));
+      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+    });
+  });
+
+  /* ── STAGGER CHILD REVEALS ── */
+  document.querySelectorAll('.services-grid, .portfolio-grid, .why-grid, .team-grid, .problem-grid, .process-steps').forEach(function(grid) {
+    Array.from(grid.children).forEach(function(child, i) {
+      child.style.transitionDelay = (i * 0.07) + 's';
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
